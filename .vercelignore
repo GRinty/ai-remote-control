@@ -1,0 +1,12 @@
+node_modules
+.git
+.github
+*.log
+.env
+.env.local
+server/dist
+client/node_modules
+server/node_modules
+*.md
+!README.md
+!DEPLOY_TO_VERCEL.md
