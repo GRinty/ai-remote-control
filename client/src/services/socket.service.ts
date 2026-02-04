@@ -8,23 +8,51 @@ import type { Message, ChatSession, ServerConfig, StreamChunk, StreamStart, Stre
 
 type EventCallback<T> = (data: T) => void;
 
+const SERVER_URL_KEY = 'ai_remote_control_server_url';
+
 /**
  * Socket 服务类
  */
 class SocketService {
   private socket: Socket | null = null;
   private callbacks: Map<string, EventCallback<any>[]> = new Map();
+  private currentUrl: string = '';
+
+  /**
+   * 获取保存的服务器地址
+   */
+  getSavedServerUrl(): string {
+    return localStorage.getItem(SERVER_URL_KEY) || window.location.origin;
+  }
+
+  /**
+   * 保存服务器地址
+   */
+  saveServerUrl(url: string): void {
+    localStorage.setItem(SERVER_URL_KEY, url);
+  }
 
   /**
    * 连接到服务器
    * @param url 服务器地址
    */
-  connect(url: string = window.location.origin): void {
-    if (this.socket?.connected) {
+  connect(url?: string): void {
+    const serverUrl = url || this.getSavedServerUrl();
+    
+    // 如果已连接到相同地址，不重复连接
+    if (this.socket?.connected && this.currentUrl === serverUrl) {
       return;
     }
 
-    this.socket = io(url, {
+    // 断开旧连接
+    if (this.socket) {
+      this.socket.disconnect();
+    }
+
+    this.currentUrl = serverUrl;
+    this.saveServerUrl(serverUrl);
+
+    this.socket = io(serverUrl, {
       transports: ['websocket', 'polling'],
       reconnection: true,
       reconnectionAttempts: 5,
@@ -40,6 +68,14 @@ class SocketService {
   disconnect(): void {
     this.socket?.disconnect();
     this.socket = null;
+    this.currentUrl = '';
+  }
+
+  /**
+   * 获取当前服务器地址
+   */
+  getCurrentUrl(): string {
+    return this.currentUrl;
   }
 
   /**

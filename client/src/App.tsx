@@ -7,6 +7,7 @@ import { Header } from './components/Layout/Header';
 import { Sidebar } from './components/Layout/Sidebar';
 import { MessageList } from './components/Chat/MessageList';
 import { ChatInput } from './components/Chat/ChatInput';
+import { ServerConfig } from './components/Common/ServerConfig';
 import { useSocket } from './hooks/useSocket';
 import { useChat } from './hooks/useChat';
 import { useMobile } from './hooks/useMobile';
@@ -15,7 +16,7 @@ import { useMobile } from './hooks/useMobile';
  * 主应用组件
  */
 function App() {
-  const { isConnected, status } = useSocket();
+  const { isConnected, status, serverUrl, connectToServer } = useSocket();
   const {
     sessions,
     currentSessionId,
@@ -39,7 +40,7 @@ function App() {
    */
   const handleSendMessage = async (content: string) => {
     if (!isConnected) {
-      alert('未连接到服务器，请检查网络连接');
+      alert('未连接到服务器，请检查网络连接或配置服务器地址');
       return;
     }
     await sendMessage(content);
@@ -81,10 +82,17 @@ function App() {
       {/* 主内容区 */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* 头部 */}
-        <Header
-          connectionStatus={status}
-          onMenuClick={() => setIsSidebarOpen(true)}
-        />
+        <header className="flex items-center justify-between px-4 py-3 bg-slate-900 border-b border-slate-800">
+          <Header
+            connectionStatus={status}
+            onMenuClick={() => setIsSidebarOpen(true)}
+          />
+          <ServerConfig
+            onConnect={connectToServer}
+            currentUrl={serverUrl}
+            isConnected={isConnected}
+          />
+        </header>
 
         {/* 消息列表 */}
         <MessageList
@@ -99,7 +107,7 @@ function App() {
         <ChatInput
           onSend={handleSendMessage}
           isStreaming={isStreaming}
-          placeholder={isConnected ? '输入消息让 AI 帮你控制电脑...' : '等待连接服务器...'}
+          placeholder={isConnected ? '输入消息让 AI 帮你控制电脑...' : '等待连接服务器...（点击右上角设置配置服务器地址）'}
         />
       </div>
     </div>
